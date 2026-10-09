@@ -1,0 +1,550 @@
+/* CGPA Calculator: "The engineering notebook".
+   Tokens (graph paper in light, cyanotype blueprint in dark) and primitives.
+   Components live in app.css; the printed marks memo in print.css. */
+
+:root {
+  --font-letter: 'Barlow Condensed', 'Arial Narrow', sans-serif-condensed, sans-serif;
+  --font-body: 'Barlow', 'Helvetica Neue', Arial, sans-serif;
+  --font-type: 'Courier Prime', 'Courier New', Courier, monospace;
+  --font-hand: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
+
+  --sq: 20px; /* one small graph square */
+  --margin-x: 72px; /* first red margin line, measured from the sheet's left edge */
+  --inset: 112px; /* where content starts, measured from the sheet's left edge */
+  --inset-r: 40px;
+  --control-h: 40px;
+  --rule-w: 200px; /* CGPA scale ruler; keep a multiple of 50 so ticks land on whole pixels */
+
+  /* Light: graph paper on a drafting desk */
+  --desk: #d4dbe3;
+  --sheet: #f5f8fb;
+  --paper: #f5f8fb; /* opaque fill for tables/boxes: masks the grid */
+  --grid-minor: #e2eaf2;
+  --grid-major: #c2d4e6;
+  --margin-rule: #e58a93;
+  --ink: #1b2a47;
+  --pencil: #4c5664; /* >= 4.5:1 even where a major grid line runs under it */
+  --line: #7b8593;
+  --hair: #c3cedb;
+  --tint: #e6edf4;
+  --red: #ad1328; /* >= 4.5:1 even where a major grid line runs under it */
+  --red-wash: #fbe9eb;
+  --green: #23673a;
+  --hl: #ffef3d;
+  --key: #1b2a47;
+  --on-ink: #f5f8fb;
+  --sheet-shadow: 0 1px 2px rgb(20 33 58 / 0.16), 0 4px 14px -6px rgb(20 33 58 / 0.3);
+  --chart-sgpa: #1b2a47;
+  --chart-cgpa: #ad1328;
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%231b2a47' stroke-width='1.5'/%3E%3C/svg%3E");
+  /* the teacher's squiggle under a wrong figure: 40 x 6, uneven like a real pen stroke */
+  --squiggle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 6'%3E%3Cpath d='M1 4C3 1 5 1 7 3.5S11 6 13 3.5 17 .8 19.5 3 24 5.8 26 3.4 30 1 32.5 3.2 37 5.4 39 2.5' fill='none' stroke='%23ad1328' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+  color-scheme: light;
+}
+
+/* Dark: cyanotype blueprint */
+:root[data-theme='dark'] {
+  --desk: #0a1628;
+  --sheet: #15396a;
+  --paper: #15396a;
+  --grid-minor: #2a4a77;
+  --grid-major: #445f87;
+  --margin-rule: #a9bcd6;
+  --ink: #edf3fa;
+  --pencil: #b4c8de;
+  --line: #8ea9c8;
+  --hair: #3d5b85;
+  --tint: #1c4479;
+  --red: #ffa0a8;
+  --red-wash: #4a2836; /* wine, h335: red-leaning, not indigo */
+  --green: #a6e3b2;
+  --hl: transparent;
+  --key: #f7e37b;
+  --on-ink: #15396a;
+  --sheet-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 6px 18px -6px rgb(0 0 0 / 0.7);
+  --chart-sgpa: #edf3fa;
+  --chart-cgpa: #ffa0a8;
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23edf3fa' stroke-width='1.5'/%3E%3C/svg%3E");
+  --squiggle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 6'%3E%3Cpath d='M1 4C3 1 5 1 7 3.5S11 6 13 3.5 17 .8 19.5 3 24 5.8 26 3.4 30 1 32.5 3.2 37 5.4 39 2.5' fill='none' stroke='%23ffa0a8' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+  color-scheme: dark;
+}
+
+/* ---------- primitives ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--desk);
+  color: var(--ink);
+  font: 400 15px/20px var(--font-body);
+  font-variant-numeric: lining-nums tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p,
+ol,
+ul,
+dl,
+dd,
+figure {
+  margin: 0;
+}
+
+ol,
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  /* round caps = a technical-pen nib (and they draw the dots in i-help/i-info/i-alert);
+     mitred joins so the redrawn square corners stay square */
+  stroke-linecap: round;
+  stroke-linejoin: miter;
+  stroke-miterlimit: 4;
+}
+
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 50;
+  padding: 10px 14px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font: 600 16px/20px var(--font-letter);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 12px;
+}
+
+/* The sheet of graph paper. Ruling = 20px squares, a stronger line every
+   5 squares, and the printed red double margin rule. */
+.sheet {
+  position: relative;
+  max-width: 1320px;
+  min-height: calc(100vh - 48px);
+  margin-inline: auto;
+  background-color: var(--sheet);
+  background-image:
+    linear-gradient(90deg, transparent calc(var(--margin-x) - 1px), var(--margin-rule) calc(var(--margin-x) - 1px) var(--margin-x), transparent var(--margin-x) calc(var(--margin-x) + 3px), var(--margin-rule) calc(var(--margin-x) + 3px) calc(var(--margin-x) + 4px), transparent calc(var(--margin-x) + 4px)),
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100px 100px,
+    100px 100px,
+    var(--sq) var(--sq),
+    var(--sq) var(--sq);
+  background-position: 0 0, -1px -1px, -1px -1px, -1px -1px, -1px -1px;
+  box-shadow: var(--sheet-shadow);
+}
+
+.container {
+  width: 100%;
+  padding-left: var(--inset);
+  padding-right: var(--inset-r);
+}
+
+/* Text written straight onto the ruling masks the lines behind it, like the
+   background mask a drafting program puts behind a text note. Small text then
+   never sits on a grid line, whatever the scroll position or theme
+   (dark pencil and redline fall to 3.4-3.8:1 on a major line without it).
+   Every small-text run that is not inside an opaque box is listed here. */
+.semester__meta > *,
+.sgpa-pill__label,
+.lede,
+.brand__text > span,
+.scheme-picker__label,
+.site-footer p,
+.btn--dashed > span {
+  background-color: var(--sheet);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding-inline: 2px;
+}
+
+.lede,
+.brand__text > span {
+  width: fit-content;
+  margin-left: -2px; /* keep the text on the same left edge as the heading */
+}
+
+/* Square ink-ruled box with an opaque paper fill */
+.card {
+  background: var(--paper);
+  border: 1px solid var(--ink);
+}
+
+/* Lettering: technical-drawing title-block capitals */
+.lettering,
+.eyebrow {
+  font-family: var(--font-letter);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.chip {
+  font: 400 14px/20px var(--font-type);
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Buttons */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--control-h);
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  font: 500 16px/20px var(--font-letter);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: background-color 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn--primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--on-ink);
+}
+
+.btn--primary:hover {
+  background: color-mix(in srgb, var(--ink) 88%, var(--sheet));
+}
+
+.btn--soft {
+  background: var(--paper);
+  border-color: var(--line);
+}
+
+.btn--soft:hover {
+  background: var(--tint);
+  border-color: var(--ink);
+}
+
+.btn--ghost {
+  color: var(--ink);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: var(--tint);
+}
+
+.btn--danger {
+  color: var(--red);
+}
+
+.btn--danger:hover {
+  border-color: var(--red);
+  background: var(--red-wash);
+  color: var(--red);
+}
+
+.btn--danger-solid,
+.btn--danger-solid:hover {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--on-ink);
+}
+
+.btn--sm {
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 15px;
+}
+
+.btn--sm .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* "Draw the next table here": a construction-line box */
+.btn--dashed {
+  width: 100%;
+  min-height: 60px;
+  border: 1px dashed var(--line);
+  background: transparent;
+  color: var(--pencil);
+}
+
+.btn--dashed:hover:not(:disabled) {
+  border-style: solid;
+  border-color: var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.btn:disabled,
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--pencil);
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--tint);
+  color: var(--ink);
+}
+
+.icon-btn--outlined {
+  width: var(--control-h);
+  height: var(--control-h);
+  border-color: var(--line);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.icon-btn--outlined:hover {
+  border-color: var(--ink);
+}
+
+.icon-btn--danger:hover:not(:disabled) {
+  background: var(--red-wash);
+  color: var(--red);
+}
+
+.icon-btn--quiet {
+  width: 32px;
+  height: 32px;
+}
+
+/* Form controls */
+
+.field {
+  width: 100%;
+  min-width: 0;
+  height: var(--control-h);
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 15px/20px var(--font-body);
+}
+
+.field::placeholder {
+  color: var(--pencil);
+  opacity: 1;
+}
+
+.field:hover {
+  border-color: var(--ink);
+}
+
+.field:focus {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+.field[type='number'] {
+  /* Courier Prime's ascent:descent (13:5 at 16px) rides its figures ~1px high in a
+     centred line box; 2px of top padding moves the centre 1px down so boxed
+     figures sit optically centred. Table cells get larger nudges (see .course). */
+  padding-top: 2px;
+  font-family: var(--font-type);
+  font-size: 16px;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.field[type='number']::-webkit-inner-spin-button,
+.field[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+select.field {
+  padding-right: 28px;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: var(--chevron);
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 11px 8px;
+  cursor: pointer;
+}
+
+/* Red-pen correction: wash, red figures, red box, and the teacher's squiggle
+   drawn under the figure. The squiggle is a background image (not
+   text-decoration, which Chromium clips inside an input's text box). */
+.field[aria-invalid='true'] {
+  background-color: var(--red-wash);
+  background-image: var(--squiggle);
+  background-repeat: no-repeat;
+  background-position: left 9px bottom 5px;
+  background-size: 40px 6px;
+  color: var(--red);
+  border-color: var(--red);
+}
+
+/* selects keep their chevron as the second layer */
+select.field[aria-invalid='true'] {
+  background-image: var(--squiggle), var(--chevron);
+  background-position: left 9px bottom 5px, right 10px center;
+  background-size: 40px 6px, 11px 8px;
+}
+
+.field[aria-invalid='true']:focus {
+  outline-color: var(--red);
+}
+
+/* Field names written beside the givens: sentence case, so not every label in
+   the app is condensed tracked capitals */
+.field-group {
+  display: grid;
+  gap: 4px;
+  font: 500 13px/16px var(--font-body);
+  color: var(--pencil);
+}
+
+.segmented {
+  display: inline-flex;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+}
+
+.segmented label {
+  position: relative;
+}
+
+.segmented label + label {
+  border-left: 1px solid var(--ink);
+}
+
+.segmented input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.segmented span {
+  display: block;
+  padding: 0 18px;
+  font: 500 16px/38px var(--font-letter);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--pencil);
+}
+
+.segmented label:hover span {
+  color: var(--ink);
+}
+
+.segmented input:checked + span {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.segmented input:focus-visible + span {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    /* no wait either: the CGPA loop is there, fully drawn, at once */
+    transition-delay: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

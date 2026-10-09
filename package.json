@@ -1,0 +1,12 @@
+{
+  "name": "cgpa-calculator",
+  "version": "1.0.0",
+  "description": "Credit-weighted SGPA and CGPA calculator for Indian university grading schemes, with a target planner and printable report.",
+  "type": "module",
+  "private": true,
+  "author": "Preran Sai Yarramasu",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test"
+  }
+}

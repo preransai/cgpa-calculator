@@ -1,0 +1,2345 @@
+/* CGPA Calculator: components. One sheet of graph paper on a drafting desk:
+   memo tables written on the ruling, a title block for the results, index tabs. */
+
+/* ---------- header ---------- */
+
+/* The header sits in the notebook's top margin. Its printed red double rule
+   runs edge to edge and crosses the vertical margin rule at the top left. */
+.topbar {
+  padding: 16px 0 6px;
+  background:
+    linear-gradient(var(--margin-rule), var(--margin-rule)) left bottom 3px / 100% 1px no-repeat,
+    linear-gradient(var(--margin-rule), var(--margin-rule)) left bottom / 100% 1px no-repeat;
+}
+
+.topbar__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  min-height: 72px;
+  padding-block: 8px 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand__mark {
+  width: 40px;
+  height: 40px;
+  flex: none;
+}
+
+.brand__frame {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.brand__grid {
+  fill: none;
+  stroke: var(--grid-major);
+  stroke-width: 1;
+}
+
+.brand__plot {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.brand__point {
+  fill: var(--paper);
+  stroke: var(--red);
+  stroke-width: 1.75;
+}
+
+.brand__text strong {
+  display: block;
+  font: 700 28px/28px var(--font-letter);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.brand__text span {
+  display: block;
+  margin-top: 4px;
+  font: 400 14px/16px var(--font-body);
+  color: var(--pencil);
+}
+
+.topbar__controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.scheme-picker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* like "Date:" printed before the blank in a notebook's header: sentence case */
+.scheme-picker__label {
+  font: 400 13px/16px var(--font-body);
+  color: var(--pencil);
+  white-space: nowrap;
+}
+
+/* A fill-in line, like "Date: ______" in a notebook header */
+.scheme-picker select {
+  width: 232px;
+  border-width: 0 0 1px;
+  border-color: var(--ink);
+  padding-left: 2px;
+  font: 600 16px/20px var(--font-body);
+}
+
+.help-button {
+  padding-inline: 6px;
+  font: 500 15px/20px var(--font-body);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.help-button span {
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 4px;
+}
+
+/* a text link, not a tinted button (outranks .btn--ghost:hover:not(:disabled)) */
+.help-button.btn--ghost:hover {
+  background: none;
+}
+
+.help-button:hover span {
+  text-decoration-color: var(--ink);
+}
+
+:root[data-theme='dark'] .icon--moon,
+:root:not([data-theme='dark']) .icon--sun {
+  display: none;
+}
+
+/* ---------- layout ---------- */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  align-items: start;
+  gap: 40px;
+  padding-block: 36px 60px;
+}
+
+/* The toolbar and the semester heads follow the workspace's own width, not
+   the viewport's: the workspace is narrow both on a small tablet (561-860)
+   and beside the 400px results column just above 1100. */
+.workspace {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  container: workspace / inline-size;
+}
+
+.workspace__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+h1 {
+  font: 600 40px/40px var(--font-letter);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.lede {
+  margin-top: 8px;
+  max-width: 60ch;
+  color: var(--pencil);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  padding-left: 1px;
+}
+
+.toolbar .btn {
+  margin-left: -1px;
+  padding: 0 14px;
+}
+
+.toolbar .btn .icon {
+  width: 17px;
+  height: 17px;
+}
+
+/* lift the hovered or focused box above its neighbours so its whole border
+   (and the focus outline) shows over the shared edges */
+.toolbar .btn:hover,
+.toolbar .btn:focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
+.toolbar [data-action='reset'] {
+  margin-left: auto;
+}
+
+.insights {
+  position: sticky;
+  top: 24px;
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
+
+.insights > .card {
+  min-width: 0;
+}
+
+#detailed-editor,
+#quick-editor {
+  display: grid;
+  gap: 20px;
+}
+
+/* ---------- semesters (memo tables written on the grid) ---------- */
+
+.semester-list {
+  display: grid;
+  gap: 20px;
+  counter-reset: sem;
+}
+
+.semester.card {
+  position: relative;
+  border: 0;
+  background: none;
+  counter-increment: sem;
+}
+
+/* Question-number-in-the-margin: the semester number, handwritten */
+.semester::before {
+  content: counter(sem);
+  content: counter(sem) / '';
+  position: absolute;
+  top: 2px;
+  right: calc(100% + var(--inset) - var(--margin-x) + 14px);
+  font: 600 30px/44px var(--font-hand);
+  color: var(--ink);
+}
+
+.semester__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  min-height: 48px;
+  padding: 2px 0;
+  border-bottom: 1px solid var(--ink);
+}
+
+.semester__toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: 600 22px/24px var(--font-letter);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.semester__toggle:hover .semester__title {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+}
+
+.semester__toggle:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.semester__chevron {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+  transition: transform 0.15s;
+}
+
+.semester__toggle[aria-expanded='false'] .semester__chevron {
+  transform: rotate(-90deg);
+}
+
+/* The meta takes whatever the row has left (basis 0) and wraps inside it, so
+   a long note never pushes the SGPA box onto a line of its own; in a narrow
+   workspace it moves under the title instead (container query below). */
+.semester__meta {
+  display: flex;
+  flex: 1 1 0%;
+  flex-wrap: wrap;
+  min-width: 0;
+  font: 400 14px/20px var(--font-body);
+  color: var(--pencil);
+}
+
+/* the separator ends the run before it, so a wrapped line never starts with a dot */
+.semester__meta > :not(:last-child)::after {
+  content: '·';
+  margin: 0 2px 0 6px; /* + the 2px mask padding of the two runs: 6px either side, optically even */
+  color: var(--pencil);
+  font-style: normal;
+  font-weight: 400;
+}
+
+.semester__meta .flag {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.semester__meta .pending {
+  color: var(--pencil);
+  font-style: italic;
+}
+
+/* SGPA: the answer, boxed */
+.sgpa-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sgpa-pill__label {
+  font: 500 14px/16px var(--font-letter);
+  letter-spacing: 0.08em;
+  color: var(--pencil);
+}
+
+.sgpa-pill__value {
+  min-width: 64px;
+  padding: 2px 8px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  font: 700 18px/24px var(--font-type);
+  text-align: center;
+}
+
+.sgpa-pill.is-empty .sgpa-pill__value {
+  border-style: dashed;
+  border-color: var(--line);
+  color: var(--pencil);
+  font-weight: 400;
+}
+
+.semester__actions {
+  display: flex;
+  gap: 0;
+}
+
+.semester__body {
+  border: 1px solid var(--ink);
+  border-top: 0;
+  background: var(--paper);
+}
+
+.course-head,
+.course {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 84px 116px 40px;
+}
+
+.course-head {
+  align-items: center;
+  height: 28px;
+  border-bottom: 1px solid var(--ink);
+  font: 500 13px/16px var(--font-letter);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pencil);
+}
+
+.course-head::before {
+  content: 'No.';
+}
+
+.course-head::before,
+.course-head > span {
+  height: 100%;
+  padding: 6px 10px 0;
+}
+
+/* Only the two rules that bound the figures are drawn (Course | Credits | Grade).
+   The No. column reads as the table's own margin and the remove column as a
+   margin note, so a long sample reads as a ruled memo, not a spreadsheet. */
+.course-head > span:nth-child(1),
+.course-head > span:nth-child(2) {
+  border-right: 1px solid var(--line);
+}
+
+.course-head > span:nth-child(2),
+.course-head > span:nth-child(3),
+.course-head::before {
+  text-align: center;
+}
+
+.semester__body:has(.course-list:empty) .course-head,
+.course-list:not(:empty) + .semester__empty {
+  display: none;
+}
+
+.course-list {
+  counter-reset: course;
+}
+
+.course {
+  counter-increment: course;
+  border-bottom: 1px solid var(--line);
+}
+
+/* One baseline per row. In a 40px row with the line box centred, the baseline
+   sits at  pad-top + (40 - pad-top)/2 + (ascent - descent)/2 , so with
+   Barlow 15 (15:3) the course name's baseline is at 26px. Courier Prime has
+   ascent:descent 13:5 at 16px, 12:5 at 15px, 11:5 at 14px, so each Courier
+   cell is pushed down by exactly the difference: credits 4px, grade 5px,
+   row number 6px. Verified with a baseline guide at 1366 and 390. */
+.course::before {
+  content: counter(course);
+  content: counter(course) / '';
+  padding-top: 6px;
+  font: 400 14px/34px var(--font-type);
+  color: var(--pencil);
+  text-align: center;
+}
+
+.course .field {
+  height: 40px;
+  border: 0;
+  background-color: transparent;
+}
+
+.course .course__name,
+.course .course__credits {
+  border-right: 1px solid var(--line);
+}
+
+.course .field:hover {
+  background-color: var(--tint);
+}
+
+/* a long name ends in an ellipsis instead of being cut mid-letter
+   (honoured by Chromium and Firefox while the input is not focused) */
+.course__name {
+  text-overflow: ellipsis;
+}
+
+.course .course__credits {
+  padding-top: 4px;
+  text-align: center;
+}
+
+.course .course__grade {
+  padding-top: 5px;
+  font-family: var(--font-type);
+  font-size: 15px;
+  word-spacing: -0.35em;
+}
+
+/* a bad cell is boxed in red pen (cells have no border of their own), and the
+   squiggle sits under the centred figure */
+.course .field[aria-invalid='true'],
+.quick-row .field[aria-invalid='true'] {
+  background-color: var(--red-wash);
+  box-shadow: inset 0 0 0 1px var(--red);
+}
+
+.course .course__credits[aria-invalid='true'],
+.quick-row .field[aria-invalid='true'] {
+  background-position: center bottom 5px;
+}
+
+.course .icon-btn--quiet {
+  width: 40px;
+  height: 40px;
+}
+
+.course.is-failed .course__grade,
+.course.is-failed::before {
+  color: var(--red);
+  font-weight: 700;
+}
+
+.semester__empty {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  font-style: italic;
+  color: var(--pencil);
+}
+
+/* "+ Add course" reads as the next blank row of the table */
+.semester__body > [data-action='add-course'] {
+  width: 100%;
+  min-height: 40px;
+  justify-content: flex-start;
+  padding-left: 12px;
+  color: var(--pencil);
+}
+
+.semester__body > [data-action='add-course']:hover {
+  color: var(--ink);
+}
+
+.empty-state {
+  padding: 28px 20px;
+  border: 1px dashed var(--line);
+  background: var(--paper);
+  font-style: italic;
+  text-align: center;
+  color: var(--pencil);
+}
+
+/* ---------- quick mode ---------- */
+
+.quick {
+  padding: 0;
+}
+
+.quick__head,
+.quick-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) minmax(0, 1fr) 120px 40px;
+  align-items: stretch;
+}
+
+.quick__head {
+  height: 28px;
+  border-bottom: 1px solid var(--ink);
+  font: 500 13px/16px var(--font-letter);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pencil);
+}
+
+.quick__head > span {
+  padding: 6px 10px 0;
+}
+
+/* rules only between the label and the three figure columns */
+.quick__head > span:nth-child(-n + 3) {
+  border-right: 1px solid var(--line);
+}
+
+.quick__head > span:not(:first-child) {
+  text-align: center;
+}
+
+.quick-row {
+  border-bottom: 1px solid var(--line);
+}
+
+.quick-row:last-child {
+  border-bottom: 0;
+}
+
+/* baseline of the row = Barlow Condensed 17 label at 27px; Courier 16 figures
+   are pushed down 6px to meet it (same arithmetic as .course) */
+.quick-row .field {
+  height: 40px;
+  padding-top: 6px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background-color: transparent;
+  text-align: center;
+}
+
+/* (not on a red-pen cell: the correction's wash stays under the pointer) */
+.quick-row .field:hover:not([aria-invalid='true']) {
+  background-color: var(--tint);
+}
+
+.quick-row__label {
+  padding: 0 10px;
+  border-right: 1px solid var(--line);
+  font: 600 17px/40px var(--font-letter);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.quick-row__cgpa {
+  padding: 6px 12px 0;
+  font: 700 16px/34px var(--font-type);
+  text-align: center;
+}
+
+/* ---------- summary = the title block ---------- */
+
+.summary {
+  display: grid;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+}
+
+/* Name cell | scheme cell. A flex row that wraps by itself when a long scheme
+   name ("Generic 10-point (UGC CBCS)") does not fit beside the name, at any
+   width, instead of ellipsizing it. The name cell draws both dividers with
+   real borders, overlapping the frame by 1px (negative margins):
+   - side by side: its right border is the divider, its bottom border lies on
+     the row rule;
+   - wrapped: its right border lies on the frame, its bottom border is the rule
+     between the two rows, and the scheme cell takes the full width. */
+.summary__top {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--ink);
+}
+
+.summary__top .eyebrow {
+  flex: 1000 0 auto;
+  margin: 0 -1px -1px 0;
+  padding: 10px 12px 8px;
+  border-right: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  font: 600 19px/22px var(--font-letter);
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.summary__top .chip {
+  flex: 1 1 auto;
+  min-width: 0; /* ellipsis only as a last resort, narrower than any real layout */
+  padding: 11px 12px 9px;
+}
+
+.summary__main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 164px;
+  border-bottom: 1px solid var(--ink);
+}
+
+.summary--ring-only .summary__main {
+  grid-template-columns: 1fr;
+}
+
+.summary--ring-only .facts {
+  display: none;
+}
+
+.summary--ring-only .ring {
+  border-right: 0;
+}
+
+/* The CGPA cell: highlighted, circled in red pen, measured on a scale */
+.ring {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 14px;
+  padding: 24px 12px 30px; /* the bottom 30px holds the scale's numerals */
+  border-right: 1px solid var(--ink);
+}
+
+.ring__label {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  padding-bottom: 12px; /* the loop overshoots the figure by 14px */
+}
+
+.ring__number {
+  position: relative;
+  z-index: 0;
+  /* Courier gives the point a whole cell ("8 . 21"); pull the cells together,
+     and pad the end back so the box (and the highlighter) spans the ink */
+  padding-right: 0.07em;
+  font: 700 56px/60px var(--font-type);
+  letter-spacing: -0.07em;
+  color: var(--key);
+}
+
+/* the one highlighter stroke in the whole app: a swipe through the lower half
+   of the digits, from just before the first to just past the last */
+/* The outline is a chisel-tip marker's: a slanted cut where the nib lands,
+   edges that wander by a pixel or two, a slight blot where it pauses and
+   lifts off at the far end. */
+.ring__number::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 46% -7px 12% -7px;
+  background: var(--hl);
+  clip-path: polygon(
+    3.2% 12%,
+    14% 7%,
+    38% 5%,
+    63% 2.5%,
+    88% 0.5%,
+    97.6% 0,
+    99.4% 9%,
+    100% 31%,
+    98.9% 50%,
+    99.8% 71%,
+    98.6% 88%,
+    96.5% 91%,
+    71% 92%,
+    44% 95.5%,
+    17% 97%,
+    1.6% 100%,
+    0 81%,
+    1.1% 57%,
+    0.4% 34%
+  );
+  transform: rotate(-1.2deg);
+}
+
+/* the teacher's red-pen loop around the final answer */
+.ring__loop {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  width: 196px;
+  height: 88px;
+  margin-left: -98px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.ring__loop path {
+  fill: none;
+  stroke: var(--red);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* drawn once, like a pen stroke, whenever a CGPA first appears */
+  stroke-dasharray: 1;
+  animation: pen-stroke 0.5s ease-out 0.1s backwards;
+}
+
+@keyframes pen-stroke {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+/* A drafting scale, 0 to max. The box is the graduated strip: its top border
+   is the scale's edge, the graduations hang from it (a long tick per grade
+   point, a short one per 0.2: the same "1 sq = 0.2 GP" as the graph), the ink
+   bar is laid on the edge from 0 to the CGPA, and the strip is numbered at
+   both ends: a generated "0" and #cgpa-scale ("out of 10") as the end label.
+   --units (the scheme's max) is set inline by summary.js, so a 4.0 scale gets
+   four long ticks. Widths are multiples of 100px so every tick is a whole px. */
+.ring__rule {
+  --tick: var(--ink);
+  --tick-minor: var(--line);
+  position: relative;
+  width: min(var(--rule-w), 100%);
+  height: 10px;
+  margin-top: 6px; /* the bar lies in these 6px, on the edge */
+  border-top: 1px solid var(--tick);
+  border-right: 1px solid var(--tick); /* the last long tick, at max */
+  background:
+    linear-gradient(90deg, var(--tick) 1px, transparent 1px) 0 0 / calc(100% / var(--units, 10)) 9px repeat-x,
+    linear-gradient(90deg, var(--tick-minor) 1px, transparent 1px) 0 0 / calc(100% / var(--units, 10) / 5) 5px repeat-x;
+}
+
+.ring__rule svg {
+  position: absolute;
+  left: 0;
+  bottom: 100%; /* sits on the edge and covers it from 0 to the value */
+  width: 100%;
+  height: 6px;
+  overflow: visible;
+}
+
+/* end numerals, typed under the first and last long ticks */
+.ring__rule::before,
+.ring__scale {
+  position: absolute;
+  top: 100%;
+  margin-top: 4px;
+  font: 400 12.5px/14px var(--font-type);
+  color: var(--pencil);
+  white-space: nowrap;
+}
+
+.ring__rule::before {
+  content: '0';
+  content: '0' / '';
+  left: 0;
+  transform: translateX(-50%);
+}
+
+.ring__scale {
+  right: -7px; /* centres the "10" of "out of 10" under the end tick */
+}
+
+.ring__track {
+  stroke: none;
+}
+
+.ring__value {
+  stroke: var(--ink);
+  stroke-width: 6;
+  stroke-dasharray: 0 100;
+  transition: stroke-dasharray 0.5s ease-out;
+}
+
+.ring.is-empty .ring__value,
+.ring.is-empty .ring__loop,
+.ring.is-empty .ring__number::before {
+  display: none;
+}
+
+.ring.is-empty .ring__number {
+  color: var(--pencil);
+}
+
+/* Percentage over Class. Rows are implicit and equal, so when summary.js hides
+   #class-fact (VTU, Generic 10-point: percentage but no class rule) the one
+   remaining cell fills the column instead of leaving an empty half-cell. */
+.facts {
+  display: grid;
+  grid-auto-rows: 1fr;
+}
+
+.fact {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px 10px;
+}
+
+/* the rule goes between two *visible* cells only */
+.fact:not([hidden]) ~ .fact:not([hidden]) {
+  border-top: 1px solid var(--ink);
+}
+
+/* one cell alone: label top-left, entry written at the foot of the cell,
+   level with the scale's numerals across the block */
+.facts:has(> .fact[hidden]) .fact dd {
+  margin-top: auto;
+}
+
+.fact dt,
+.stat dt {
+  font: 500 13px/16px var(--font-letter);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pencil);
+}
+
+.fact dd {
+  display: grid;
+  margin-top: 2px;
+}
+
+.fact__value {
+  font: 700 22px/28px var(--font-type);
+}
+
+#class-value {
+  font: 600 21px/24px var(--font-letter);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* "First Class with Distinction" (summary.js adds .is-long): one size down,
+   so it is two lines in the 140px cell ("First Class with" is 131px at 19) */
+#class-value.is-long {
+  font-size: 19px;
+  line-height: 22px;
+}
+
+.fact__note {
+  margin-top: 2px;
+  font: 400 13px/16px var(--font-body);
+  color: var(--pencil);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px 10px;
+}
+
+.stat + .stat {
+  border-left: 1px solid var(--ink);
+}
+
+.stat dt {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat dd {
+  font: 700 22px/28px var(--font-type);
+}
+
+.stat.is-alert dd {
+  color: var(--red);
+}
+
+/* ---------- trend + planner panel with notebook index tabs ---------- */
+
+.panel {
+  position: relative;
+  margin-top: 64px;
+  padding: 0 16px 16px;
+}
+
+.tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 36px;
+  margin: -37px 0 16px -1px;
+  padding-left: 10px;
+}
+
+.tab {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 20px;
+  border: 0;
+  background: none;
+  color: var(--pencil);
+  font: 500 16px/20px var(--font-letter);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.tab::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  background: var(--tint);
+  transform: perspective(28px) rotateX(2.4deg);
+  transform-origin: bottom;
+}
+
+.tab .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.tab:hover {
+  color: var(--ink);
+}
+
+.tab[aria-selected='true'] {
+  height: 36px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.tab[aria-selected='true']::before {
+  bottom: -1px;
+  border-color: var(--ink);
+  background: var(--paper);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -6px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin-bottom: 8px;
+  font: 400 14px/20px var(--font-body);
+  color: var(--pencil);
+}
+
+.legend__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend__item::before {
+  content: '';
+  width: 26px;
+  height: 10px;
+  background: var(--chart-sgpa);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 10'%3E%3Cpath d='M0 5h8.5M17.5 5H26' stroke='%23000' stroke-width='1.5'/%3E%3Ccircle cx='13' cy='5' r='3.7' fill='none' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 10'%3E%3Cpath d='M0 5h8.5M17.5 5H26' stroke='%23000' stroke-width='1.5'/%3E%3Ccircle cx='13' cy='5' r='3.7' fill='none' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.legend__item--cgpa::before {
+  background: var(--chart-cgpa);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 10'%3E%3Cpath d='M0 5h4M6.5 5h3M16.5 5h3M22 5h4' stroke='%23000' stroke-width='1.5'/%3E%3Cpath d='M10.3 2.3l5.4 5.4M15.7 2.3l-5.4 5.4' stroke='%23000' stroke-width='1.6'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 10'%3E%3Cpath d='M0 5h4M6.5 5h3M16.5 5h3M22 5h4' stroke='%23000' stroke-width='1.5'/%3E%3Cpath d='M10.3 2.3l5.4 5.4M15.7 2.3l-5.4 5.4' stroke='%23000' stroke-width='1.6'/%3E%3C/svg%3E");
+}
+
+.chart {
+  position: relative;
+}
+
+.chart svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+/* empty state: blank graph paper with only the axes inked in */
+.chart__empty {
+  display: grid;
+  place-items: center;
+  height: 230px;
+  padding: 24px;
+  border-left: 1.25px solid var(--ink);
+  border-bottom: 1.25px solid var(--ink);
+  margin-left: 46px;
+  background-image:
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+  background-size: 40px 40px, 40px 40px, 8px 8px, 8px 8px;
+  font-style: italic;
+  text-align: center;
+  color: var(--pencil);
+}
+
+/* the message is a slip of paper laid on the blank graph (chart.js wraps the
+   text in this span), so no grid line runs through either line of it */
+.chart__empty > span {
+  max-width: 30ch;
+  padding: 6px 10px;
+  border: 1px dashed var(--line);
+  background-color: var(--paper);
+}
+
+.chart-paper line {
+  stroke: var(--grid-minor);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.chart-paper line.is-major,
+.chart-grid line {
+  stroke: var(--grid-major);
+  shape-rendering: crispEdges;
+}
+
+.chart-frame {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.25;
+}
+
+.chart-axis text,
+.chart-scale {
+  font-family: var(--font-type);
+  font-size: 11.5px;
+  fill: var(--pencil);
+}
+
+.chart-label {
+  font-family: var(--font-letter);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  fill: var(--pencil);
+}
+
+.chart-line {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chart-line--sgpa {
+  stroke: var(--chart-sgpa);
+}
+
+.chart-line--cgpa {
+  stroke: var(--chart-cgpa);
+  stroke-dasharray: 5 3;
+}
+
+.chart-dot {
+  fill: var(--paper);
+  stroke: var(--chart-sgpa);
+  stroke-width: 1.5;
+  transition: r 0.12s;
+}
+
+.chart-dot--cgpa {
+  fill: none;
+  stroke: var(--chart-cgpa);
+  stroke-width: 1.6;
+  stroke-linecap: square;
+}
+
+.chart-dot:focus {
+  outline: none;
+}
+
+.chart-dot.is-active {
+  r: 6px;
+  stroke-width: 2;
+}
+
+.chart-dot:focus-visible {
+  stroke-width: 2.5;
+}
+
+.chart-guide {
+  stroke: var(--ink);
+  stroke-dasharray: 2 3;
+}
+
+.chart-hit {
+  fill: transparent;
+  cursor: crosshair;
+}
+
+/* a paper slip laid on the graph */
+.chart-tooltip {
+  position: absolute;
+  z-index: 2;
+  width: 150px;
+  padding: 6px 10px 8px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 14px/20px var(--font-body);
+  pointer-events: none;
+}
+
+.chart-tooltip strong {
+  display: block;
+  margin-bottom: 4px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--line);
+  font: 600 15px/20px var(--font-letter);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.tip-row {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.tip-row b {
+  font: 700 14px/20px var(--font-type);
+}
+
+.swatch {
+  width: 20px;
+  height: 10px;
+  background: var(--chart-sgpa);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 10'%3E%3Cpath d='M0 5h8.5M17.5 5H26' stroke='%23000' stroke-width='1.5'/%3E%3Ccircle cx='13' cy='5' r='3.7' fill='none' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 10'%3E%3Cpath d='M0 5h8.5M17.5 5H26' stroke='%23000' stroke-width='1.5'/%3E%3Ccircle cx='13' cy='5' r='3.7' fill='none' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.swatch--cgpa {
+  background: var(--chart-cgpa);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 10'%3E%3Cpath d='M0 5h4M6.5 5h3M16.5 5h3M22 5h4' stroke='%23000' stroke-width='1.5'/%3E%3Cpath d='M10.3 2.3l5.4 5.4M15.7 2.3l-5.4 5.4' stroke='%23000' stroke-width='1.6'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 10'%3E%3Cpath d='M0 5h4M6.5 5h3M16.5 5h3M22 5h4' stroke='%23000' stroke-width='1.5'/%3E%3Cpath d='M10.3 2.3l5.4 5.4M15.7 2.3l-5.4 5.4' stroke='%23000' stroke-width='1.6'/%3E%3C/svg%3E");
+}
+
+.tip-row:last-child span:first-child {
+  background: none;
+}
+
+/* ---------- planner = "Given / To find / ∴" ---------- */
+
+.planner {
+  display: grid;
+  gap: 14px;
+}
+
+.planner__intro {
+  color: var(--ink);
+}
+
+.planner__intro b {
+  font: 600 16px/20px var(--font-letter);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.planner__fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 10px;
+}
+
+.plan-result {
+  display: block;
+  padding: 12px 14px 12px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.plan-result__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 15px/20px var(--font-letter);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.plan-result__label .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* tightened like the CGPA figure ("8.94", not "8 . 94"); the "∴" and "/ 10"
+   keep their own spacing */
+.plan-result__figure {
+  margin-top: 4px;
+  font: 700 40px/44px var(--font-type);
+  letter-spacing: -0.07em;
+  color: inherit;
+}
+
+.plan-result--possible .plan-result__figure::before,
+.plan-result--reached .plan-result__figure::before,
+.plan-result--finished .plan-result__figure::before {
+  content: '∴';
+  content: '∴' / '';
+  margin-right: 8px;
+  font: 400 28px/44px var(--font-type);
+  letter-spacing: 0;
+}
+
+/* inline-block: an atomic box, so the impossible-state strike-through skips it.
+   The 3px on the margin gives back the last digit's tightening. */
+.plan-result__figure small {
+  display: inline-block;
+  margin-left: 11px;
+  font: 400 15px/20px var(--font-type);
+  letter-spacing: 0;
+  color: var(--pencil);
+}
+
+.plan-result__text {
+  margin-top: 6px;
+  color: var(--ink);
+}
+
+/* The same drafting scale: the bar (ink / green / red by status, via
+   currentColor) is laid on the edge up to the SGPA you need; a red wedge above
+   it marks where you are now; "0" and the max (data-max, set with --units by
+   planner-panel.js) are typed under the end ticks. */
+.plan-meter {
+  --tick: var(--ink);
+  --tick-minor: var(--line);
+  position: relative;
+  height: 8px;
+  margin: 26px 0 20px; /* 26px above: wedge 7 + gap 1 + bar 5 + air; 20px below: numerals */
+  border-top: 1px solid var(--tick);
+  border-right: 1px solid var(--tick);
+  background:
+    linear-gradient(90deg, var(--tick) 1px, transparent 1px) 0 0 / calc(100% / var(--units, 10)) 8px repeat-x,
+    linear-gradient(90deg, var(--tick-minor) 1px, transparent 1px) 0 0 / calc(100% / var(--units, 10) / 5) 4px repeat-x;
+}
+
+.plan-meter__fill {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  height: 5px;
+  max-width: 100%;
+  background: currentColor;
+  transition: width 0.4s ease-out;
+}
+
+.plan-meter__mark {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  width: 0;
+  height: 0;
+  border: 5px solid transparent;
+  border-top: 7px solid var(--red);
+  border-bottom: 0;
+  transform: translateX(-5px);
+}
+
+.plan-meter::before,
+.plan-meter::after {
+  position: absolute;
+  top: 100%;
+  margin-top: 4px;
+  font: 400 12px/14px var(--font-type);
+  color: var(--pencil);
+}
+
+.plan-meter::before {
+  content: '0';
+  content: '0' / '';
+  left: 0;
+  transform: translateX(-50%);
+}
+
+.plan-meter::after {
+  content: attr(data-max);
+  right: 0;
+  transform: translateX(50%);
+}
+
+/* "Done" over "Left", like the givens of a worked problem: always two lines,
+   so the result keeps the same height in every state and at every width
+   (side by side they fitted or wrapped depending on the figures) */
+.plan-result__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 10px;
+  font: 400 13px/16px var(--font-body);
+  color: var(--pencil);
+}
+
+.plan-result--possible {
+  border-color: var(--ink);
+}
+
+.plan-result--reached {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.plan-result--impossible {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* an impossible requirement is struck through in red pen */
+.plan-result--impossible .plan-result__figure {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.plan-result--invalid .plan-result__label {
+  color: var(--red);
+}
+
+/* ---------- dialogs: a loose sheet lifted off the desk ---------- */
+
+.dialog {
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  padding: 0;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: var(--sheet-shadow);
+}
+
+.dialog--wide {
+  width: min(720px, calc(100vw - 32px));
+  background-image: linear-gradient(90deg, transparent 39px, var(--margin-rule) 39px 40px, transparent 40px 43px, var(--margin-rule) 43px 44px, transparent 44px);
+}
+
+/* literal values: older engines do not pass custom properties to ::backdrop */
+.dialog::backdrop {
+  background: rgb(15 25 45 / 0.5);
+}
+
+:root[data-theme='dark'] .dialog::backdrop {
+  background: rgb(3 10 22 / 0.62);
+}
+
+.dialog[open] {
+  animation: lift 0.16s ease-out;
+}
+
+.dialog__head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 14px 12px 64px;
+  border-bottom: 2px solid var(--ink);
+  background: var(--paper);
+}
+
+.dialog__head h2,
+.dialog__title {
+  font: 600 26px/28px var(--font-letter);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dialog__body {
+  padding: 20px 24px 24px;
+}
+
+.dialog--wide .dialog__body {
+  padding-left: 64px;
+  padding-right: 32px;
+}
+
+.dialog__title + p {
+  margin-top: 10px;
+  color: var(--ink);
+}
+
+.dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+/* a formula reads as one unit: it never breaks across lines, and if a very
+   narrow screen ever forces it to, each fragment keeps its own tint box */
+.formula-inline {
+  white-space: nowrap;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding: 1px 5px;
+  background: var(--tint);
+  font: 400 0.95em var(--font-type);
+  color: var(--ink);
+}
+
+.prose h3 {
+  margin: 28px 0 8px;
+  font: 600 19px/24px var(--font-letter);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.prose h3:first-child {
+  margin-top: 0;
+}
+
+.prose p {
+  margin-bottom: 10px;
+  color: var(--ink);
+  line-height: 22px;
+}
+
+.formula {
+  overflow-x: auto;
+  padding: 14px 16px;
+  border: 1px solid var(--ink);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+  background-size: 10px 10px;
+  font: 700 16px/20px var(--font-type);
+  color: var(--ink);
+}
+
+.callout {
+  padding: 12px 14px;
+  border: 1px dashed var(--line);
+}
+
+.callout::before {
+  content: 'Note — ';
+  font: 600 15px/20px var(--font-letter);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mini-table {
+  width: 100%;
+  margin: 4px 0 12px;
+  border: 1px solid var(--ink);
+  border-collapse: collapse;
+  font: 400 15px/20px var(--font-type);
+}
+
+.mini-table th,
+.mini-table td {
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  text-align: right;
+}
+
+.mini-table :is(th, td):first-child {
+  text-align: left;
+  font-family: var(--font-body);
+}
+
+.mini-table :is(th, td):nth-child(3) {
+  text-align: center;
+}
+
+.mini-table thead th {
+  border-bottom: 1px solid var(--ink);
+  font: 500 13px/16px var(--font-letter);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pencil);
+}
+
+.mini-table tfoot :is(th, td) {
+  border-top: 1px solid var(--ink);
+  font-weight: 700;
+}
+
+.grade-chips {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 0 12px 1px;
+}
+
+.grade-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 -1px -1px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  font: 400 15px/20px var(--font-type);
+}
+
+.grade-chip b {
+  font: 600 16px/20px var(--font-letter);
+}
+
+.grade-chip.is-fail {
+  color: var(--red);
+}
+
+/* ---------- toasts: a slip of paper, or an inked label ---------- */
+
+.toasts {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 40;
+  display: grid;
+  justify-items: stretch; /* stacked toasts share the widest one's width */
+  gap: 8px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  transform: translateX(-50%);
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--on-ink);
+  font: 500 15px/20px var(--font-body);
+  animation: lift 0.16s ease-out;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.toast--error {
+  border-color: var(--red);
+  background: var(--paper);
+  color: var(--red);
+  box-shadow: inset 4px 0 0 var(--red);
+}
+
+.toast.is-leaving {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+@keyframes lift {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* ---------- footer: signed at the bottom of the page ---------- */
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px 24px;
+  padding-block: 20px 28px;
+  font: 400 14px/20px var(--font-body);
+  color: var(--pencil);
+}
+
+.site-footer > * {
+  position: relative;
+}
+
+.signature {
+  font: 600 25px/20px var(--font-hand);
+  color: var(--ink);
+}
+
+.report {
+  display: none;
+}
+
+/* ---------- responsive ---------- */
+
+/* Workspace narrower than the six-box strip (about 720px: the strip is 719px
+   wide): the boxes go into a 3x2 grid, borders still shared, Reset closing the
+   second row; icons move above the labels once a third of the width is too
+   narrow for "Export JSON" beside its icon. Phones get the same grid from the
+   560px media query below. */
+@container workspace (width < 720px) {
+  .toolbar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .toolbar .btn {
+    margin-top: -1px;
+  }
+
+  .toolbar [data-action='reset'] {
+    margin-left: -1px;
+  }
+}
+
+@container workspace (width < 440px) {
+  .toolbar .btn {
+    flex-direction: column;
+    gap: 2px;
+    min-height: 60px;
+    padding: 6px 4px;
+    font-size: 14px;
+    line-height: 16px;
+  }
+}
+
+/* Narrow workspace: the meta drops to its own line under the title and the
+   SGPA box stays at the right of the title row (the phone layout). */
+@container workspace (width < 640px) {
+  .semester__meta {
+    order: 5;
+    flex-basis: 100%;
+    padding: 0 0 4px 22px;
+  }
+
+  .sgpa-pill {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* side by side, both frames end on the same line: the shorter one is
+     stretched (the panel keeps its content at the top; the title block gives
+     the extra height to the CGPA row, whose figure stays centred) */
+  .insights {
+    position: static;
+    order: -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 0 24px;
+  }
+
+  .panel {
+    margin-top: 37px;
+  }
+
+  /* half-width title block: narrower facts column, 150px scale (still whole-px ticks) */
+  .summary__main {
+    grid-template-columns: minmax(0, 1fr) 132px;
+  }
+
+  .summary {
+    --rule-w: 150px;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  /* half-width CGPA cell (182px at 861): the phone-size figure and loop, so the
+     196px loop never runs over the frame */
+  .ring__number {
+    font-size: 46px;
+    line-height: 52px;
+  }
+
+  .ring__loop {
+    top: -12px;
+    width: 164px;
+    height: 74px;
+    margin-left: -82px;
+  }
+
+  /* 108px of facts cell: "First Class with" is 103px at 15 */
+  #class-value.is-long {
+    font-size: 15px;
+    line-height: 18px;
+  }
+
+  /* half-width title block (318px at 861): stats two by two so no label is cut */
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stat:nth-child(3) {
+    border-left: 0;
+  }
+
+  .stat:nth-child(n + 3) {
+    border-top: 1px solid var(--ink);
+  }
+
+  /* half-width panel: compact index tabs on one line */
+  .tabs {
+    padding-left: 4px;
+  }
+
+  .tab {
+    gap: 6px;
+    padding: 0 12px;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 860px) {
+  .insights {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* full-width title block again */
+  .summary__main {
+    grid-template-columns: minmax(0, 1fr) 164px;
+  }
+
+  .summary {
+    --rule-w: 200px;
+  }
+
+  /* full width again: full-size figure and loop, one row of four stats */
+  .ring__number {
+    font-size: 56px;
+    line-height: 60px;
+  }
+
+  .ring__loop {
+    top: -14px;
+    width: 196px;
+    height: 88px;
+    margin-left: -98px;
+  }
+
+  #class-value.is-long {
+    font-size: 19px;
+    line-height: 22px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .stat:nth-child(3) {
+    border-left: 1px solid var(--ink);
+  }
+
+  .stat:nth-child(n + 3) {
+    border-top: 0;
+  }
+
+  .panel {
+    margin-top: 64px;
+  }
+
+  .topbar__controls {
+    width: 100%;
+  }
+
+  .scheme-picker {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .scheme-picker select {
+    width: 100%;
+  }
+}
+
+/* Small tablets, landscape phones and split windows (561-800). The desktop
+   sheet's 112px inset and five-column memo would leave the course names
+   narrower than on a phone, and the header row would squeeze the scheme
+   select to a stub. So the sheet tightens (margin at 40, content at 64), the
+   help link becomes the 40px icon box, and the memo takes the phone's
+   columns (no "No.", credits head "Cr") at the desktop type sizes. */
+@media (max-width: 800px) {
+  :root {
+    --margin-x: 40px;
+    --inset: 64px;
+    --inset-r: 20px;
+  }
+
+  body {
+    padding: 12px;
+  }
+
+  .sheet {
+    min-height: calc(100vh - 24px);
+  }
+
+  .help-button {
+    width: var(--control-h);
+    padding: 0;
+    border: 1px solid var(--line);
+    background: var(--paper);
+  }
+
+  .help-button span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .semester::before {
+    font-size: 25px;
+    right: calc(100% + var(--inset) - var(--margin-x) + 7px);
+  }
+
+  .course-head,
+  .course {
+    grid-template-columns: minmax(0, 1fr) 56px 96px 36px;
+  }
+
+  .course::before,
+  .course-head::before,
+  .course-head .hide-sm {
+    display: none;
+  }
+
+  .course .course__credits {
+    padding-inline: 4px;
+  }
+
+  .course .icon-btn--quiet {
+    width: 36px;
+  }
+}
+
+@media (max-width: 560px) {
+  :root {
+    --margin-x: 30px;
+    --inset: 44px;
+    --inset-r: 16px;
+  }
+
+  .summary {
+    --rule-w: 150px;
+  }
+
+  body {
+    padding: 0;
+    font-size: 15px;
+  }
+
+  .sheet {
+    min-height: 100vh;
+    box-shadow: none;
+  }
+
+  .topbar {
+    padding-top: 8px;
+  }
+
+  .topbar__inner {
+    min-height: 0;
+    gap: 12px;
+  }
+
+  .brand__mark {
+    width: 34px;
+    height: 34px;
+  }
+
+  .brand__text strong {
+    font-size: 24px;
+    line-height: 24px;
+  }
+
+  .brand__text span,
+  .scheme-picker__label {
+    display: none;
+  }
+
+  .topbar__controls {
+    gap: 8px;
+  }
+
+  .help-button {
+    width: var(--control-h);
+    padding: 0;
+    border: 1px solid var(--line);
+    background: var(--paper);
+  }
+
+  .help-button span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .layout {
+    gap: 28px;
+    padding-block: 24px 36px;
+  }
+
+  h1 {
+    font-size: 32px;
+    line-height: 36px;
+  }
+
+  .workspace__head {
+    align-items: stretch;
+  }
+
+  .segmented {
+    display: flex;
+    width: 100%;
+  }
+
+  .segmented label {
+    flex: 1;
+    text-align: center;
+  }
+
+  .toolbar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .toolbar .btn {
+    flex-direction: column;
+    gap: 2px;
+    min-height: 60px;
+    margin-top: -1px;
+    padding: 6px 4px;
+    font-size: 14px;
+    line-height: 16px;
+  }
+
+  .toolbar [data-action='reset'] {
+    margin-left: -1px;
+  }
+
+  .summary__main {
+    grid-template-columns: minmax(0, 1fr) 132px;
+  }
+
+  .ring {
+    padding-inline: 8px;
+  }
+
+  .ring__number {
+    font-size: 46px;
+    line-height: 52px;
+  }
+
+  .ring__loop {
+    width: 164px;
+    height: 74px;
+    margin-left: -82px;
+    top: -12px;
+  }
+
+  .fact__value {
+    font-size: 19px;
+  }
+
+  #class-value {
+    font-size: 18px;
+    line-height: 20px;
+  }
+
+  #class-value.is-long {
+    font-size: 15px;
+    line-height: 18px;
+  }
+
+  .stat {
+    padding-inline: 8px;
+  }
+
+  .stat dd {
+    font-size: 19px;
+  }
+
+  .panel {
+    padding: 0 12px 12px;
+  }
+
+  /* first visit on a phone: the blank graph is a strip, not 230px of nothing,
+     and the key is hidden until there is something to key */
+  .chart__empty {
+    height: 132px;
+    padding: 12px;
+  }
+
+  .tabpanel:has(.chart__empty) .legend {
+    display: none;
+  }
+
+  /* and the title block drops its row of zeros until something is graded
+     (#live-summary still announces "No CGPA yet") */
+  .summary:has(.ring.is-empty) .stats {
+    display: none;
+  }
+
+  .summary:has(.ring.is-empty) .summary__main {
+    border-bottom: 0;
+  }
+
+  .tabs {
+    padding-left: 4px;
+  }
+
+  .tab {
+    gap: 6px;
+    padding: 0 12px;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+
+  /* a narrower slip (rows need 110px), so on a 274-304px chart it still
+     fits beside most points instead of over the axis numbers */
+  .chart-tooltip {
+    width: 132px;
+    padding-inline: 8px;
+  }
+
+  .semester::before {
+    font-size: 25px;
+    right: calc(100% + var(--inset) - var(--margin-x) + 7px);
+  }
+
+  .semester__toggle {
+    font-size: 20px;
+  }
+
+  /* meta under the title: also set here for engines without container queries */
+  .semester__meta {
+    order: 5;
+    flex-basis: 100%;
+    padding: 0 0 4px 22px;
+  }
+
+  .sgpa-pill {
+    margin-left: auto;
+  }
+
+  .sgpa-pill__label {
+    display: none;
+  }
+
+  /* name column gets every spare px: credits 46 (head reads "Cr"), remove 32;
+     course names that still do not fit end in an ellipsis (360px: 144px of name) */
+  .course-head,
+  .course {
+    grid-template-columns: minmax(0, 1fr) 46px 76px 32px;
+  }
+
+  .course::before,
+  .course-head::before {
+    display: none;
+  }
+
+  .course .field {
+    padding-inline: 8px;
+    font-size: 14px;
+  }
+
+  /* at 14px Barlow's baseline is 25.5px and Courier's needs 5px of push */
+  .course .course__credits,
+  .course .course__grade {
+    padding-top: 5px;
+  }
+
+  .course .course__credits {
+    padding-inline: 4px;
+  }
+
+  .course select.field {
+    padding-right: 20px;
+    background-position: right 6px center;
+  }
+
+  .course select.field[aria-invalid='true'] {
+    background-position: left 7px bottom 5px, right 6px center;
+  }
+
+  .course .icon-btn--quiet {
+    width: 32px;
+  }
+
+  .course-head,
+  .quick__head {
+    font-size: 12px;
+    letter-spacing: 0.03em;
+  }
+
+  .course-head::before,
+  .course-head > span,
+  .quick__head > span {
+    padding-inline: 4px;
+  }
+
+  .course-head > span:first-child {
+    padding-left: 8px;
+  }
+
+  .quick__head,
+  .quick-row {
+    grid-template-columns: 60px minmax(0, 1fr) minmax(0, 1fr) 58px 34px;
+  }
+
+  /* "Sem 16" on one line: 16px lettering is 43px wide, 55px with the padding.
+     Baseline 1 + 39/2 + 0.4 x 16 = 27px, level with the Courier figures. */
+  .quick-row__label {
+    padding: 1px 6px 0;
+    font-size: 16px;
+    line-height: 39px;
+    white-space: nowrap;
+  }
+
+  .hide-sm {
+    display: none;
+  }
+
+  .planner__fields {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .planner__fields .field-group:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .dialog__body,
+  .dialog--wide .dialog__body {
+    padding-inline: 18px;
+  }
+
+  .dialog--wide {
+    background-image: none;
+  }
+
+  .dialog__head {
+    padding-left: 18px;
+  }
+
+  .site-footer {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 420px) {
+  /* the worked example fits the help page's 286px body at 360 */
+  .mini-table {
+    font-size: 14px;
+  }
+
+  .mini-table th,
+  .mini-table td {
+    padding: 5px 6px;
+  }
+
+  .mini-table :is(th, td):first-child {
+    white-space: nowrap;
+  }
+
+  .mini-table thead th {
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stat:nth-child(3) {
+    border-left: 0;
+  }
+
+  .stat:nth-child(n + 3) {
+    border-top: 1px solid var(--ink);
+  }
+}
+
+/* the 4.0 scale has the CGPA cell to itself: 200px keeps its 0.2 ticks on
+   whole pixels at every width (after the media queries so it always wins) */
+.summary.summary--ring-only {
+  --rule-w: 200px;
+}
+
+/* ---------- forced colours (Windows High Contrast) ----------
+   Forced colours drop backgrounds, background images and box-shadows. Every
+   state this design carries in one of those gets an outline or border here,
+   and the drawn instruments (scales, chart, CGPA loop) opt out of the
+   automatic remap and are redrawn in system colours instead. */
+@media (forced-colors: active) {
+  /* checked segment: was an ink fill */
+  .segmented input:checked + span {
+    outline: 2px solid Highlight;
+    outline-offset: -4px;
+  }
+
+  /* invalid field: was a wash, an inset red box and a squiggle */
+  .field[aria-invalid='true'] {
+    outline: 2px solid CanvasText;
+    outline-offset: -3px;
+  }
+
+  .field:focus,
+  .field[aria-invalid='true']:focus {
+    outline: 3px solid Highlight;
+    outline-offset: -3px;
+  }
+
+  /* selected index tab: was the paper fill joining it to its page */
+  .tab[aria-selected='true']::before {
+    border: 2px solid Highlight;
+    border-bottom: 0;
+  }
+
+  /* scales: graduations were background gradients, the bar an ink stroke */
+  .ring__rule,
+  .plan-meter {
+    forced-color-adjust: none;
+    --tick: CanvasText;
+    --tick-minor: CanvasText;
+    color: CanvasText;
+  }
+
+  .ring__value {
+    stroke: CanvasText;
+  }
+
+  .plan-meter__fill {
+    background: CanvasText;
+  }
+
+  .plan-meter__mark {
+    border-top-color: Highlight;
+  }
+
+  .ring__rule::before,
+  .ring__scale,
+  .plan-meter::before,
+  .plan-meter::after {
+    color: CanvasText;
+  }
+
+  /* the highlighter (a background) is dropped; the loop still circles the answer */
+  .ring__loop {
+    forced-color-adjust: none;
+  }
+
+  .ring__loop path {
+    stroke: Highlight;
+  }
+
+  /* chart: two series stay apart by colour and by shape (rings vs crosses, solid vs dashed) */
+  .chart svg,
+  .legend__item::before,
+  .swatch {
+    forced-color-adjust: none;
+  }
+
+  /* the ruling stays quiet (GrayText is bright green in High Contrast Black,
+     and would drown the two series) */
+  .chart-paper line {
+    stroke: CanvasText;
+    stroke-opacity: 0.16;
+  }
+
+  .chart-paper line.is-major,
+  .chart-grid line {
+    stroke: CanvasText;
+    stroke-opacity: 0.32;
+  }
+
+  .chart-frame,
+  .chart-line--sgpa,
+  .chart-guide {
+    stroke: CanvasText;
+  }
+
+  .chart-axis text,
+  .chart-label,
+  .chart-scale {
+    fill: CanvasText;
+  }
+
+  .chart-line--cgpa,
+  .chart-dot--cgpa {
+    stroke: Highlight;
+  }
+
+  .chart-dot {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+
+  .legend__item::before,
+  .swatch {
+    background: CanvasText;
+  }
+
+  .legend__item--cgpa::before,
+  .swatch--cgpa {
+    background: Highlight;
+  }
+
+  .tip-row:last-child span:first-child {
+    background: none;
+  }
+}
